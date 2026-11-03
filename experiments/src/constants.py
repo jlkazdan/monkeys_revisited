@@ -7,25 +7,32 @@ import seaborn as sns
 
 os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 
-sns.set_theme(style="whitegrid")
+sns.set_theme(style="whitegrid", font="DejaVu Sans")
 sns.set_context("paper")
 
 DATA_SOURCES = [
     ('jailbreaking', analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df),
     ('code_contests', analyze.create_or_load_large_language_monkeys_code_contests_individual_outcomes_df),
     ('math', analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df),
+    ('gsm8k', analyze.create_or_load_large_language_monkeys_gsm8k_individual_outcomes_df),
+    ('mini_f2f', analyze.create_or_load_large_language_monkeys_mini_f2f_individual_outcomes_df),
 ]
 
 SOURCES_TO_TITLES = {
     'jailbreaking': 'AdvBench',
     'math': 'MATH',
     'code_contests': 'Code Contests',
+    'gsm8k': 'GSM8K',
+    'mini_f2f': 'MiniF2F-MATH',
 }
 
 APPROACH_TO_TITLES = {
     "Regression": "Regression",
     "Discretization": "Discretized Beta [Schaeffer et al.]",
     "Dynamic": "Dynamic + Beta-Binomial [Ours]",
+
+    "Uniform": "Uniform + Beta-Binomial",
+    "Dynamic Discretization": "Dynamic + Discretized Beta",
 }
 
 SAMPLER_TO_TITLES = {

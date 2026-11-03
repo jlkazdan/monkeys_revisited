@@ -5,22 +5,25 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 
-from constants import DIR_SYN_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, SAMPLER_TO_TITLES
+from constants import DIR_SYN_RESULTS, DIR_PLOTS, APPROACH_TO_TITLES
 from utilities import load_all_parquets
 
-sns.set_theme(style="whitegrid")
+sns.set_theme(style="whitegrid", font="DejaVu Sans")
 sns.set_context("paper")
 
+greens = sns.color_palette("Greens", 4)
 grays = sns.color_palette("Greys", 2)
 purples = sns.color_palette("Purples", 5)
 PALETTE = {
-    "Uniform": grays[1],
+    "Uniform": purples[2],
     "Dynamic": purples[3],
+    "Discretization": greens[2],
+    "Dynamic Discretization": greens[3],
 }
 
 ID_COLS   = ["k", "Budget"]
 TRUE_COL  = "True Pass@k"
-METHOD_ORDER = ["Uniform", "Dynamic"]
+METHOD_ORDER = ["Uniform", "Dynamic", "Discretization", "Dynamic Discretization"]
 METHOD_CAT = CategoricalDtype(METHOD_ORDER, ordered=True)
 METHOD_COLS = [f"{m} Estimate" for m in METHOD_ORDER]
 
@@ -67,7 +70,12 @@ def bootstrap_mse(df: pd.DataFrame, B: int = 1000, seed: int | None = 0) -> pd.D
         out["Method"] = out["Method"].astype(METHOD_CAT)
     return out
 
-def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
+def plot_mse_single_k(
+    stats: pd.DataFrame,
+    out_dir=DIR_PLOTS,
+    title: str="Prediction Mean Squared Error (MSE) on Synthetic Data",
+    filename: str | None=None,
+):
     """Plot MSE vs Budget for a single k value."""
     stats = stats.copy()
     stats["Method"] = pd.Categorical(stats["Method"], METHOD_ORDER, ordered=True)
@@ -86,7 +94,7 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
         ax.plot(
             gm["Budget"], gm["center"],
             marker="o", linewidth=1.6,
-            label=method, color=color
+            label=APPROACH_TO_TITLES.get(str(method), str(method)), color=color
         )
         ax.fill_between(
             gm["Budget"], gm["low"], gm["high"],
@@ -103,12 +111,12 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
 
     # Title and legend
     k_value = stats["k"].iloc[0]
-    ax.set_title(f"Prediction Mean Squared Error (MSE) on Synthetic Data", fontsize=12)
+    ax.set_title(title, fontsize=12)
 
     present_methods = [m for m in METHOD_ORDER if m in stats["Method"].unique()]
     ax.legend(
         handles=[
-            Line2D([0], [0], color=PALETTE[m], marker="o", linewidth=1.6, label=m)
+            Line2D([0], [0], color=PALETTE[m], marker="o", linewidth=1.6, label=APPROACH_TO_TITLES[m])
             for m in present_methods
         ],
         frameon=False,
@@ -116,11 +124,10 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
     )
 
     # Save
-    out_dir = out_dir / "syn"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    base = f"estimate_mse-k={k_value}"
-    fig.savefig(out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
-    fig.savefig(out_dir / f"{base}.pdf", bbox_inches="tight")
+    base = out_dir / "syn" / (filename or f"estimate_mse-k={k_value}")
+    base.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(f"{base}.png", dpi=200, bbox_inches="tight")
+    fig.savefig(f"{base}.pdf", bbox_inches="tight")
     plt.close(fig)
 
 def run():

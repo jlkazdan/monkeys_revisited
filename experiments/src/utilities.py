@@ -38,21 +38,21 @@ def attempt(generator: Union[Generator[bool, None, None], List[Generator[bool, N
         return [attempt(gen, n) for gen, n in zip(generator, amt)]
     return sum(next(generator) for _ in range(amt))
 
-def shuffled_attempt_generators(samples: list[list[bool]], seed: int) -> List[Generator[bool, None, None]]:
+def shuffled_attempt_generators(samples: list[list[bool]], seed: int) -> tuple[List[Generator[bool, None, None]], List[int]]:
     """
     Create a list of generators, each simulating attempts for a subtask using the provided samples.
     """
     gen = np.random.default_rng(seed)
-    return [(s for s in gen.permutation(sb_samples)) for sb_samples in samples]
+    return [(s for s in gen.permutation(sb_samples)) for sb_samples in samples], [len(sb_samples) for sb_samples in samples]
 
-def evenly_distribute_budget(budget: int, n_subtasks: int) -> List[int]:
+def evenly_distribute_budget(budget: int, n_subtasks: int, seed: int=0) -> List[int]:
     """
     Evenly distribute a total budget across a number of subtasks.
     Returns an array of budgets for each subtask.
     """
     problem_budgets = np.full(n_subtasks, budget // n_subtasks)
     problem_budgets[:budget % n_subtasks] += 1  # distribute remaining attempts
-    return np.random.permutation(problem_budgets).tolist()
+    return np.random.default_rng(seed).permutation(problem_budgets).tolist()
 
 def extract_models_with_samples(df: pd.DataFrame) -> Generator[Tuple[str, np.ndarray], None, None]:
     """
